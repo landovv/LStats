@@ -1,34 +1,41 @@
-name: Generate API after Uptime Check
+name: Generate API from Uptime History
 
 on:
-  workflow_run:
-    workflows: ["Uptime CI"]
-    types:
-      - completed
+  schedule:
+    - cron: "*/5 * * * *"   # каждые 5 минут
+  workflow_dispatch:        # можно запустить вручную
 
 jobs:
-  build:
+  update:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-      - name: Checkout master (contains history + this workflow)
+      - name: Checkout master (history files)
         uses: actions/checkout@v3
         with:
           ref: master
 
-      - name: Checkout gh-pages into subdirectory
+      - name: Checkout gh-pages (for api folder)
         uses: actions/checkout@v3
         with:
           ref: gh-pages
           path: gh-pages-repo
           token: ${{ secrets.GH_PAT }}
 
+      - name: Update history time (force commit)
+        run: |
+          # Обновляем lastUpdated в файле истории, даже если статус не изменился
+          current_time=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+          sed -i "s/lastUpdated:.*/lastUpdated: $current_time/" history/landovh-ru.yml
+
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add history/landovh-ru.yml
+          git commit -m "Force update lastUpdated" || echo "No changes to commit"
+          git push origin master
+
       - name: Build api/summary.json from history
         run: |
-          # 👇 Вот ЭТА строка покажет, какие файлы есть в history/
-          ls -la history/
-
           mkdir -p gh-pages-repo/api
           echo '[' > gh-pages-repo/api/summary.json
 
@@ -41,10 +48,7 @@ jobs:
             uptime=$(grep -oP 'uptime:\s*\K.*' "$file" | head -1 || echo "100")
             lastChecked=$(grep -oP 'lastUpdated:\s*\K.*' "$file" | head -1 || echo "")
 
-            # Исправляем имя: landovh-ru → landovh.ru
             name=$(echo "$name" | sed 's/-/./')
-
-            # Если uptime пустой, ставим 100
             [ -z "$uptime" ] && uptime=100
 
             if [ "$first" = true ]; then
@@ -65,5 +69,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add api/summary.json
-          git commit -m "Auto-update api/summary.json after uptime check" || echo "No changes"
+          git commit --allow-empty -m "Auto-update api/summary.json" || echo "No changes"
           git push origin gh-pages
