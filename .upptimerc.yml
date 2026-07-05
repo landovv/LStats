@@ -4,7 +4,7 @@ repo: upptime # The name of this repository
 
 sites:
   - name: landovh.ru
-    url: ttps://landovh.ru
+    url: https://landovh.ru
   - name: Wikipedia
     url: https://en.wikipedia.org
   - name: Hacker News
