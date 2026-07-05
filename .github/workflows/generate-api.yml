@@ -1,45 +1,59 @@
-name: Generate API from History
+name: Generate API after Uptime Check
+
 on:
-  workflow_dispatch:
-  push:
-    paths:
-      - 'history/**'
+  workflow_run:
+    workflows: ["Uptime CI"]
+    types:
+      - completed
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
     steps:
-      - name: Checkout gh-pages branch
+      - name: Checkout master (history files)
+        uses: actions/checkout@v3
+        with:
+          ref: master
+          path: master-repo
+
+      - name: Checkout gh-pages (for api folder)
         uses: actions/checkout@v3
         with:
           ref: gh-pages
           token: ${{ secrets.GH_PAT }}
 
-      - name: Checkout master history
-        uses: actions/checkout@v3
-        with:
-          path: master-temp
-          ref: master
-
-      - name: Generate api/summary.json
+      - name: Build api/summary.json from history
         run: |
           mkdir -p api
           echo '[' > api/summary.json
+
           first=true
-          for file in master-temp/history/*.yml; do
+          for file in master-repo/history/*.yml; do
             [ -f "$file" ] || continue
+
             name=$(basename "$file" .yml)
             status=$(grep -oP 'status:\s*\K.*' "$file" | head -1)
             uptime=$(grep -oP 'uptime:\s*\K.*' "$file" | head -1 || echo "100")
             lastChecked=$(grep -oP 'lastUpdated:\s*\K.*' "$file" | head -1 || echo "")
+
+            # Исправляем имя: landovh-ru → landovh.ru
+            name=$(echo "$name" | sed 's/-/./')
+
+            # Если uptime пустой, ставим 100
+            [ -z "$uptime" ] && uptime=100
+
             if [ "$first" = true ]; then
               first=false
             else
               echo ',' >> api/summary.json
             fi
+
             echo "  { \"name\": \"$name\", \"status\": \"$status\", \"uptime\": $uptime, \"lastChecked\": \"$lastChecked\" }" >> api/summary.json
           done
           echo ']' >> api/summary.json
+
           cat api/summary.json
 
       - name: Commit and push to gh-pages
@@ -47,5 +61,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add api/summary.json
-          git commit -m "Generate API from history" || echo "No changes"
+          git commit -m "Auto-update api/summary.json after uptime check" || echo "No changes"
           git push origin gh-pages
