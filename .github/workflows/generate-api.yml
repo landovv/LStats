@@ -26,6 +26,9 @@ jobs:
 
       - name: Build api/summary.json from history
         run: |
+          # 👇 Вот ЭТА строка покажет, какие файлы есть в history/
+          ls -la history/
+
           mkdir -p gh-pages-repo/api
           echo '[' > gh-pages-repo/api/summary.json
 
