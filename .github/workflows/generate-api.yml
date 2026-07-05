@@ -12,25 +12,25 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-      - name: Checkout master (history files)
+      - name: Checkout master (contains history + this workflow)
         uses: actions/checkout@v3
         with:
           ref: master
-          path: master-repo
 
-      - name: Checkout gh-pages (for api folder)
+      - name: Checkout gh-pages into subdirectory
         uses: actions/checkout@v3
         with:
           ref: gh-pages
+          path: gh-pages-repo
           token: ${{ secrets.GH_PAT }}
 
       - name: Build api/summary.json from history
         run: |
-          mkdir -p api
-          echo '[' > api/summary.json
+          mkdir -p gh-pages-repo/api
+          echo '[' > gh-pages-repo/api/summary.json
 
           first=true
-          for file in master-repo/history/*.yml; do
+          for file in history/*.yml; do
             [ -f "$file" ] || continue
 
             name=$(basename "$file" .yml)
@@ -47,17 +47,18 @@ jobs:
             if [ "$first" = true ]; then
               first=false
             else
-              echo ',' >> api/summary.json
+              echo ',' >> gh-pages-repo/api/summary.json
             fi
 
-            echo "  { \"name\": \"$name\", \"status\": \"$status\", \"uptime\": $uptime, \"lastChecked\": \"$lastChecked\" }" >> api/summary.json
+            echo "  { \"name\": \"$name\", \"status\": \"$status\", \"uptime\": $uptime, \"lastChecked\": \"$lastChecked\" }" >> gh-pages-repo/api/summary.json
           done
-          echo ']' >> api/summary.json
+          echo ']' >> gh-pages-repo/api/summary.json
 
-          cat api/summary.json
+          cat gh-pages-repo/api/summary.json
 
       - name: Commit and push to gh-pages
         run: |
+          cd gh-pages-repo
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add api/summary.json
