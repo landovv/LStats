@@ -1,0 +1,51 @@
+name: Generate API from History
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'history/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v3
+        with:
+          ref: gh-pages
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Checkout master history
+        uses: actions/checkout@v3
+        with:
+          path: master-temp
+          ref: master
+
+      - name: Generate api/summary.json
+        run: |
+          mkdir -p api
+          echo '[' > api/summary.json
+          first=true
+          for file in master-temp/history/*.yml; do
+            [ -f "$file" ] || continue
+            name=$(basename "$file" .yml)
+            status=$(grep -oP 'status:\s*\K.*' "$file" | head -1)
+            uptime=$(grep -oP 'uptime:\s*\K.*' "$file" | head -1 || echo "100")
+            lastChecked=$(grep -oP 'lastUpdated:\s*\K.*' "$file" | head -1 || echo "")
+            if [ "$first" = true ]; then
+              first=false
+            else
+              echo ',' >> api/summary.json
+            fi
+            echo "  { \"name\": \"$name\", \"status\": \"$status\", \"uptime\": $uptime, \"lastChecked\": \"$lastChecked\" }" >> api/summary.json
+          done
+          echo ']' >> api/summary.json
+          cat api/summary.json
+
+      - name: Commit and push to gh-pages
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add api/summary.json
+          git commit -m "Generate API from history" || echo "No changes"
+          git push origin gh-pages
