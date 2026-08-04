@@ -4,17 +4,19 @@
     "url": "https://landovh.ru",
     "icon": "https://icons.duckduckgo.com/ip3/landovh.ru.ico",
     "slug": "landovh-ru",
-    "status": "down",
-    "uptime": "100.00%",
-    "uptimeDay": "100.00%",
-    "uptimeWeek": "100.00%",
-    "uptimeMonth": "100.00%",
-    "uptimeYear": "100.00%",
-    "time": 1363,
-    "timeDay": 1642,
-    "timeWeek": 1476,
-    "timeMonth": 1363,
-    "timeYear": 1363,
-    "dailyMinutesDown": {}
+    "status": "up",
+    "uptime": "99.63%",
+    "uptimeDay": "88.91%",
+    "uptimeWeek": "98.42%",
+    "uptimeMonth": "99.63%",
+    "uptimeYear": "99.63%",
+    "time": 1425,
+    "timeDay": 2473,
+    "timeWeek": 1704,
+    "timeMonth": 1425,
+    "timeYear": 1425,
+    "dailyMinutesDown": {
+      "2026-08-04": 160
+    }
   }
 ]
