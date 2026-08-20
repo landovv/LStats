@@ -5,16 +5,16 @@
     "icon": "https://icons.duckduckgo.com/ip3/landovh.ru.ico",
     "slug": "landovh-ru",
     "status": "down",
-    "uptime": "99.75%",
+    "uptime": "99.76%",
     "uptimeDay": "100.00%",
     "uptimeWeek": "100.00%",
     "uptimeMonth": "99.64%",
-    "uptimeYear": "99.75%",
-    "time": 1555,
-    "timeDay": 845,
-    "timeWeek": 2277,
-    "timeMonth": 1638,
-    "timeYear": 1555,
+    "uptimeYear": "99.76%",
+    "time": 1551,
+    "timeDay": 1376,
+    "timeWeek": 1257,
+    "timeMonth": 1630,
+    "timeYear": 1551,
     "dailyMinutesDown": {
       "2026-08-04": 160
     }
